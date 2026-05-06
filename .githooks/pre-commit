@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Thin wrapper: defer to the shared validator so local and CI use identical rules.
+set -euo pipefail
+repo_root="$(git rev-parse --show-toplevel)"
+exec "${repo_root}/scripts/check-go-fmt.sh" staged
