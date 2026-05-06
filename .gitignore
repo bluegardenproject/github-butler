@@ -1,0 +1,33 @@
+# Binaries
+github-butler
+/bin/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test / coverage
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Go build cache / workspace files
+/vendor/
+go.work
+go.work.sum
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Local config (user config lives in ~/.config/github-butler/)
+config.local.yaml

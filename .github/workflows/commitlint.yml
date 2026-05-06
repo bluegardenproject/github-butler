@@ -1,0 +1,45 @@
+name: commitlint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  conventional-commits:
+    name: Validate commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Validate every commit in the PR range
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          chmod +x scripts/check-commit-msg.sh
+
+          fail=0
+          tmp="$(mktemp)"
+          trap 'rm -f "$tmp"' EXIT
+
+          # Walk every commit introduced by this PR.
+          while IFS= read -r sha; do
+            git log -1 --format=%B "$sha" > "$tmp"
+            if ! scripts/check-commit-msg.sh "$tmp"; then
+              echo "::error::commit $sha has an invalid message header"
+              fail=1
+            fi
+          done < <(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA")
+
+          if [[ $fail -ne 0 ]]; then
+            echo "::error::One or more commits violate Conventional Commits 1.0.0."
+            echo "Fix locally with: git rebase -i $BASE_SHA  (reword the offending commits)"
+            exit 1
+          fi
+
+          echo "All commit messages conform to Conventional Commits 1.0.0."
