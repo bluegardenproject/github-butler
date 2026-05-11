@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/bluegardenproject/github-butler/compare/v0.2.0...v0.3.0) (2026-05-11)
+
+
+### Features
+
+* **update:** add installer and startup update prompt ([d9c78c9](https://github.com/bluegardenproject/github-butler/commit/d9c78c98001c0399ffd0a7ce2de1f870e4faa9d5))
+
 ## [0.2.0](https://github.com/bluegardenproject/github-butler/compare/v0.1.0...v0.2.0) (2026-05-09)
 
 
