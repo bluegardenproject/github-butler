@@ -21,38 +21,22 @@ A neon-themed terminal dashboard that polls GitHub via the local `gh` CLI and sh
 
 ## Requirements
 
-- Go 1.25+ to build
 - [`gh`](https://cli.github.com/) CLI installed and authenticated (`gh auth login`)
+- Go 1.25+ only if building from source
 
 ## Install
 
-### From a release
+### Linux / macOS
 
-Pre-built binaries for Linux, macOS, and Windows are published on the [Releases](https://github.com/bluegardenproject/github-butler/releases) page. Grab the asset for your platform, mark it executable, and drop it on `$PATH`:
-
-```bash
-curl -L -o github-butler https://github.com/bluegardenproject/github-butler/releases/latest/download/github-butler-darwin-arm64
-chmod +x github-butler
-mv github-butler /usr/local/bin/
-```
-
-(Replace `darwin-arm64` with `linux-amd64`, `linux-arm64`, `darwin-amd64`, or `windows-amd64.exe` as appropriate.)
-
-### From source
-
-Clone the repo and build a local binary:
+Install the latest release with one command:
 
 ```bash
-git clone https://github.com/bluegardenproject/github-butler.git
-cd github-butler
-make build
+curl -fsSL https://raw.githubusercontent.com/bluegardenproject/github-butler/main/scripts/install.sh | bash
 ```
 
-Or install straight into `$GOBIN` (usually `~/go/bin`):
+The installer downloads the matching release asset into `~/.github-butler/` and adds that directory to your shell `PATH` if needed.
 
-```bash
-go install github.com/bluegardenproject/github-butler@latest
-```
+Pre-built binaries are also published on the [Releases](https://github.com/bluegardenproject/github-butler/releases) page.
 
 Verify with `github-butler --version`.
 
@@ -70,6 +54,14 @@ Then run the binary:
 ```bash
 github-butler
 ```
+
+If a newer release is available, `github-butler` prompts before opening the dashboard:
+
+```text
+There is a new version v0.3.0 available. Update now Y/N
+```
+
+Answer `Y` to rerun the same install script, replace the local binary, and restart `github-butler` automatically. Answer `N` to continue with the current version.
 
 ### First launch
 
@@ -176,6 +168,7 @@ cmd/root.go                # flag parsing + wiring, including --version
 internal/
   config/                  # YAML load/save/validate, defaults
   github/                  # gh CLI wrapper, GraphQL query, pure derivation logic
+  update/                  # latest-release check and install-script self-update
   ui/
     app.go                 # root Bubble Tea model + screen routing
     messages.go            # shared tea.Msg types
@@ -188,6 +181,8 @@ internal/
     settings.go            # settings list + interval editor
     theme/                 # neon palette, styles, gradient helper
     components/            # small reusable widgets (banner, countdown, toast, confirm)
+scripts/
+  install.sh               # curl | bash release installer
 ```
 
 ## Development
