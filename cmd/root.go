@@ -60,6 +60,12 @@ func Run(ctx context.Context, args []string) error {
 		_ = os.Setenv("NO_COLOR", "1")
 	}
 
+	if updated, err := maybePromptForUpdate(ctx); err != nil {
+		return fmt.Errorf("update github-butler: %w", err)
+	} else if updated {
+		return nil
+	}
+
 	if _, err := exec.LookPath("gh"); err != nil {
 		return fmt.Errorf("the GitHub CLI (`gh`) was not found in PATH; install it and run `gh auth login` first")
 	}
