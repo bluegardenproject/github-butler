@@ -1,0 +1,27 @@
+name: High Contrast Dark
+base: neon-dark
+colors:
+  accent: "#D0D7DE"
+  info: "#79C0FF"
+  success: "#56D364"
+  warning: "#F2CC60"
+  danger: "#FF7B72"
+  dim: "#8B949E"
+  selected_foreground: "#0D1117"
+  selected_background: "#F0F6FC"
+  chip_foreground: "#0D1117"
+  black: "#0D1117"
+  white: "#F0F6FC"
+  dark_bg: "#0D1117"
+gradients:
+  title:
+    - "#F0F6FC"
+    - "#79C0FF"
+    - "#56D364"
+  countdown:
+    - "#FF7B72"
+    - "#F2CC60"
+    - "#56D364"
+  header:
+    - "#F0F6FC"
+    - "#79C0FF"
