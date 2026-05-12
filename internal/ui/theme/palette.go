@@ -5,8 +5,6 @@ package theme
 
 import "github.com/charmbracelet/lipgloss"
 
-// Neon palette (24-bit truecolor). Lipgloss falls back to the closest
-// 256-color match on terminals that can't render truecolor.
 var (
 	NeonPink    = lipgloss.Color("#FF10F0")
 	NeonCyan    = lipgloss.Color("#00F0FF")
@@ -32,3 +30,9 @@ var CountdownStops = []lipgloss.Color{NeonPink, NeonPurple, NeonCyan}
 
 // HeaderStops colors the table header row.
 var HeaderStops = []lipgloss.Color{NeonCyan, NeonPink}
+
+var (
+	selectedForeground = NeonYellow
+	selectedBackground = NeonPurple
+	chipForeground     = Black
+)

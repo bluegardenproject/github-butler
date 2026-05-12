@@ -1,0 +1,23 @@
+name: Midnight Neon
+base: neon-dark
+colors:
+  accent: "#FF00FF"
+  info: "#00F0FF"
+  success: "#39FF14"
+  warning: "#F5FF00"
+  danger: "#FF2A6D"
+  selected_foreground: "#F5FF00"
+  selected_background: "#BF00FF"
+gradients:
+  title:
+    - "#FF10F0"
+    - "#FF00FF"
+    - "#BF00FF"
+    - "#00F0FF"
+  countdown:
+    - "#FF10F0"
+    - "#BF00FF"
+    - "#00F0FF"
+  header:
+    - "#00F0FF"
+    - "#FF10F0"

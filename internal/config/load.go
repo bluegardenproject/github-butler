@@ -41,6 +41,19 @@ func Load(path string) (Config, error) {
 	if cfg.Repos == nil {
 		cfg.Repos = []string{}
 	}
+	if cfg.Theme.Selected == "" {
+		cfg.Theme.Selected = "auto"
+	}
+	if cfg.Theme.Directory == "" {
+		dir, err := DefaultThemeDirectory()
+		if err != nil {
+			return Config{}, err
+		}
+		cfg.Theme.Directory = dir
+	}
+	if cfg.Theme.Colors == nil {
+		cfg.Theme.Colors = map[string]string{}
+	}
 
 	if err := Validate(cfg); err != nil {
 		return Config{}, err

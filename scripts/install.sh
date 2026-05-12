@@ -39,25 +39,35 @@ case $OS in
 esac
 
 echo -e "Detected: ${GREEN}$OS-$ARCH${NC}"
+ASSET_NAME="$BINARY_NAME-$OS-$ARCH"
 
 echo -e "${BLUE}Creating installation directory...${NC}"
 mkdir -p "$INSTALL_DIR"
 
-echo -e "${BLUE}Fetching latest release...${NC}"
-RELEASE_URL="https://api.github.com/repos/$REPO/releases/latest"
-DOWNLOAD_URL=$(curl -fsSL "$RELEASE_URL" | grep -o "https://.*github-butler-$OS-$ARCH[^\"]*" | head -n 1 || true)
-
-if [ -z "$DOWNLOAD_URL" ]; then
-    echo -e "${RED}Error: Could not find binary for $OS-$ARCH${NC}"
-    echo -e "${YELLOW}Available releases: https://github.com/$REPO/releases${NC}"
-    exit 1
-fi
-
+echo -e "${BLUE}Preparing latest release download...${NC}"
+DOWNLOAD_URL="https://github.com/$REPO/releases/latest/download/$ASSET_NAME"
 echo -e "Download URL: ${GREEN}$DOWNLOAD_URL${NC}"
 
 echo -e "${BLUE}Downloading github-butler...${NC}"
 TEMP_FILE=$(mktemp)
-curl -L -o "$TEMP_FILE" "$DOWNLOAD_URL"
+MAX_ATTEMPTS=10
+ATTEMPT=1
+while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
+    if curl -fL -o "$TEMP_FILE" "$DOWNLOAD_URL"; then
+        break
+    fi
+
+    if [ "$ATTEMPT" -eq "$MAX_ATTEMPTS" ]; then
+        echo -e "${RED}Error: Could not download $ASSET_NAME${NC}"
+        echo -e "${YELLOW}Available releases: https://github.com/$REPO/releases${NC}"
+        rm -f "$TEMP_FILE"
+        exit 1
+    fi
+
+    echo -e "${YELLOW}Release asset not ready yet; retrying in 3s ($ATTEMPT/$MAX_ATTEMPTS)...${NC}"
+    ATTEMPT=$((ATTEMPT + 1))
+    sleep 3
+done
 
 echo -e "${BLUE}Installing binary...${NC}"
 mv "$TEMP_FILE" "$INSTALL_DIR/$BINARY_NAME"
