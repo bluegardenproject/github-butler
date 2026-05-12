@@ -4,7 +4,7 @@ A neon-themed terminal dashboard that polls GitHub via the local `gh` CLI and sh
 
 ## Features
 
-- Live-refreshing TUI (Bubble Tea) with a neon truecolor palette and gradients
+- Live-refreshing TUI (Bubble Tea) with built-in dark/light neon themes and gradients
 - Polls every N seconds (default 20s, configurable in-app)
 - Tracks **only PRs you authored** across a configurable list of repositories
 - Shows per-PR:
@@ -16,6 +16,7 @@ A neon-themed terminal dashboard that polls GitHub via the local `gh` CLI and sh
   - `[DRAFT]` chip for draft PRs (still listed, not filtered out)
   - `[STALE]` chip for PRs created more than 4 weeks ago
 - In-app menu for **managing repositories** (add/remove) and **settings** (poll interval)
+- Theme picker with best-effort light/dark auto-detection plus user `*.theme.yaml` files
 - Config persisted as YAML; atomic saves so a crash can't corrupt the file
 - Open a highlighted PR in your browser with one keystroke
 
@@ -104,6 +105,11 @@ repos:
   - owner/repo-b
 poll_interval_seconds: 20
 group_by_repo: false
+theme:
+  selected: auto # auto, neon-dark, neon-light, or a user theme id
+  directory: ~/.config/github-butler/themes
+  colors:
+    accent: "#FF00FF"
 ```
 
 ### Available settings
@@ -113,10 +119,44 @@ group_by_repo: false
 | `repos`                 | list | `[]`    | List of `owner/repo` slugs to track                                                          |
 | `poll_interval_seconds` | int  | `20`    | How often the app polls GitHub (min `2`, max `3600`)                                         |
 | `group_by_repo`         | bool | `false` | When `true`, PRs are grouped under per-repo section headers instead of one flat updated list |
+| `theme.selected`        | str  | `auto`  | Theme id to use (`auto`, `neon-dark`, `neon-light`, or a user theme filename without suffix) |
+| `theme.directory`       | str  | XDG dir | Directory scanned for `*.theme.yaml` user themes                                             |
+| `theme.colors`          | map  | `{}`    | Optional config-level color overrides applied after the selected theme                       |
 
-All three are editable from inside the app (`m` → **Settings** / **Repositories**), so you rarely need to hand-edit the YAML — but doing so works too.
+Repositories and settings are editable from inside the app (`m` → **Settings** / **Repositories**), so you rarely need to hand-edit the YAML — but doing so works too.
 
 On first launch with no config, the app opens to an empty dashboard; press `m` → Repositories → `a` to add one.
+
+### Themes
+
+`auto` uses Lipgloss/termenv to detect whether your terminal background is dark or light, then chooses the built-in `neon-dark` or `neon-light` theme. Detection depends on terminal support, so you can force either built-in theme from **Settings** → **Theme**.
+
+User themes live in `~/.config/github-butler/themes` by default. The app seeds two bundled examples there on startup:
+
+- `midnight-neon.theme.yaml`
+- `daylight-neon.theme.yaml`
+
+Self-updates seed newer examples after restart. If you changed one of the bundled examples, the app preserves your file and writes the updated example next to it with a `.new` suffix.
+
+Theme files are YAML partial overrides layered over a built-in base:
+
+```yaml
+name: High Contrast Blue
+base: neon-light
+colors:
+  accent: "#0047AB"
+  success: "#006B3C"
+  warning: "#805A00"
+  danger: "#B00020"
+  selected_background: "#0047AB"
+gradients:
+  title:
+    - "#0047AB"
+    - "#0077CC"
+    - "#4B0082"
+```
+
+Supported color keys include `accent`, `info`, `success`, `warning`, `danger`, `selected_foreground`, `selected_background`, `chip_foreground`, and the raw palette slots (`neon_pink`, `neon_cyan`, `neon_magenta`, `neon_lime`, `neon_purple`, `neon_orange`, `neon_yellow`, `neon_blue`, `hot_pink`, `black`, `white`, `dim`, `dark_bg`). Supported gradients are `title`, `countdown`, and `header`.
 
 ## Key bindings
 
@@ -131,7 +171,7 @@ On first launch with no config, the app opens to an empty dashboard; press `m` �
 | `m`         | Open main menu              |
 | `q`, Ctrl+C | Quit                        |
 
-### Menu / Repositories / Settings
+### Menu / Repositories / Settings / Theme Picker
 
 | Key       | Action                                                                    |
 | --------- | ------------------------------------------------------------------------- |
@@ -179,7 +219,7 @@ internal/
     menu.go                # main menu
     repos.go               # repo manager + add/remove flows
     settings.go            # settings list + interval editor
-    theme/                 # neon palette, styles, gradient helper
+    theme/                 # built-in themes, user theme loading, seeded examples
     components/            # small reusable widgets (banner, countdown, toast, confirm)
 scripts/
   install.sh               # curl | bash release installer

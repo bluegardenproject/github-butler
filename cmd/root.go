@@ -15,6 +15,7 @@ import (
 	"github.com/bluegardenproject/github-butler/internal/config"
 	"github.com/bluegardenproject/github-butler/internal/github"
 	"github.com/bluegardenproject/github-butler/internal/ui"
+	"github.com/bluegardenproject/github-butler/internal/ui/theme"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -89,9 +90,17 @@ func Run(ctx context.Context, args []string) error {
 		}
 	}
 	cfg.Path = path
+	cfg.Theme.Directory = cfg.ThemeDirectory()
+
+	if err := theme.SeedExamples(cfg.Theme.Directory); err != nil {
+		return fmt.Errorf("preparing themes: %w", err)
+	}
+	if err := theme.Activate(theme.OptionsFromConfig(cfg.Theme)); err != nil {
+		return fmt.Errorf("loading theme: %w", err)
+	}
 
 	client := github.NewClient()
-	model := ui.NewModel(cfg, client)
+	model := ui.NewModel(cfg, client, theme.Choices(cfg.Theme.Directory))
 
 	p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithContext(ctx))
 	_, err = p.Run()

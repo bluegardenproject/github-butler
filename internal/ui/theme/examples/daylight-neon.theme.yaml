@@ -1,0 +1,23 @@
+name: Daylight Neon
+base: neon-light
+colors:
+  accent: "#7B1FA2"
+  info: "#005F73"
+  success: "#006B3C"
+  warning: "#7A5C00"
+  danger: "#B00020"
+  selected_foreground: "#FFFFFF"
+  selected_background: "#005F73"
+  chip_foreground: "#FFFFFF"
+gradients:
+  title:
+    - "#A0007A"
+    - "#7B1FA2"
+    - "#005F73"
+  countdown:
+    - "#A0007A"
+    - "#5A2D82"
+    - "#005F73"
+  header:
+    - "#005F73"
+    - "#A0007A"

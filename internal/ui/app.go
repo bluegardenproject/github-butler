@@ -6,6 +6,7 @@ import (
 	"github.com/bluegardenproject/github-butler/internal/config"
 	"github.com/bluegardenproject/github-butler/internal/github"
 	"github.com/bluegardenproject/github-butler/internal/ui/components"
+	"github.com/bluegardenproject/github-butler/internal/ui/theme"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -22,6 +23,7 @@ const (
 	screenConfirmRemove
 	screenSettings
 	screenEditInterval
+	screenThemes
 )
 
 // Model is the single Bubble Tea model backing every screen. Per-screen
@@ -48,6 +50,8 @@ type Model struct {
 	menuCursor     int
 	reposCursor    int
 	settingsCursor int
+	themeCursor    int
+	themeChoices   []theme.Choice
 
 	// inputs
 	addInput      textinput.Model
@@ -66,7 +70,7 @@ type Model struct {
 }
 
 // NewModel constructs the root model.
-func NewModel(cfg config.Config, client *github.Client) Model {
+func NewModel(cfg config.Config, client *github.Client, choices []theme.Choice) Model {
 	addIn := textinput.New()
 	addIn.Placeholder = "owner/repo  or  https://github.com/owner/repo"
 	addIn.CharLimit = 200
@@ -80,6 +84,7 @@ func NewModel(cfg config.Config, client *github.Client) Model {
 	return Model{
 		cfg:           cfg,
 		client:        client,
+		themeChoices:  choices,
 		screen:        screenDashboard,
 		addInput:      addIn,
 		intervalInput: intervalIn,
@@ -177,6 +182,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateSettings(msg)
 	case screenEditInterval:
 		return m.updateEditInterval(msg)
+	case screenThemes:
+		return m.updateThemes(msg)
 	}
 	return m, nil
 }
@@ -195,7 +202,7 @@ func (m Model) View() string {
 		body = m.viewMenu()
 	case screenRepos, screenAddRepo, screenConfirmRemove:
 		body = m.viewRepos()
-	case screenSettings, screenEditInterval:
+	case screenSettings, screenEditInterval, screenThemes:
 		body = m.viewSettings()
 	}
 

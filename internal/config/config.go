@@ -20,10 +20,18 @@ type Config struct {
 	Repos               []string `yaml:"repos"`
 	PollIntervalSeconds int      `yaml:"poll_interval_seconds"`
 	GroupByRepo         bool     `yaml:"group_by_repo"`
+	Theme               Theme    `yaml:"theme"`
 
 	// Path is the file this config was loaded from (or should be saved to).
 	// Not persisted to YAML.
 	Path string `yaml:"-"`
+}
+
+// Theme is the user-facing theme configuration persisted as YAML.
+type Theme struct {
+	Selected  string            `yaml:"selected"`
+	Directory string            `yaml:"directory"`
+	Colors    map[string]string `yaml:"colors,omitempty"`
 }
 
 // PollInterval returns the poll interval as a time.Duration, falling back
@@ -38,10 +46,25 @@ func (c Config) PollInterval() time.Duration {
 
 // Default returns a Config with sensible defaults but no repos.
 func Default() Config {
+	themeDir, _ := DefaultThemeDirectory()
 	return Config{
 		Repos:               []string{},
 		PollIntervalSeconds: int(DefaultPollInterval / time.Second),
+		Theme: Theme{
+			Selected:  "auto",
+			Directory: themeDir,
+		},
 	}
+}
+
+// ThemeDirectory returns the directory where user theme files live. An empty
+// config value falls back to the default XDG-ish theme directory.
+func (c Config) ThemeDirectory() string {
+	if c.Theme.Directory != "" {
+		return c.Theme.Directory
+	}
+	dir, _ := DefaultThemeDirectory()
+	return dir
 }
 
 // DefaultPath returns the standard XDG-ish config file path:
@@ -56,4 +79,16 @@ func DefaultPath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(home, ".config", "github-butler", "config.yaml"), nil
+}
+
+// DefaultThemeDirectory returns the standard directory for user theme files.
+func DefaultThemeDirectory() (string, error) {
+	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
+		return filepath.Join(xdg, "github-butler", "themes"), nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".config", "github-butler", "themes"), nil
 }

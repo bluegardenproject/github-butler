@@ -34,6 +34,11 @@ var settingItems = []settingItem{
 		value:    func(cfg config.Config) string { return onOff(cfg.GroupByRepo) },
 		activate: toggleGroupByRepo,
 	},
+	{
+		label:    "Theme",
+		value:    func(cfg config.Config) string { return cfg.Theme.Selected },
+		activate: openThemePicker,
+	},
 }
 
 func onOff(b bool) string {
@@ -61,6 +66,18 @@ func toggleGroupByRepo(m Model) (Model, tea.Cmd) {
 	m.prs = OrderPRs(m.prs, m.cfg.GroupByRepo, m.cfg.Repos)
 	m.selected = 0
 	return m, saveConfigCmd(m.cfg)
+}
+
+func openThemePicker(m Model) (Model, tea.Cmd) {
+	m.screen = screenThemes
+	m.themeCursor = 0
+	for i, choice := range m.themeChoices {
+		if choice.ID == m.cfg.Theme.Selected {
+			m.themeCursor = i
+			break
+		}
+	}
+	return m, nil
 }
 
 func (m Model) updateSettings(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -127,6 +144,44 @@ func (m Model) updateEditInterval(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m Model) updateThemes(msg tea.Msg) (tea.Model, tea.Cmd) {
+	km, ok := msg.(tea.KeyMsg)
+	if !ok {
+		return m, nil
+	}
+	switch {
+	case key.Matches(km, keys.Quit):
+		return m, tea.Quit
+	case key.Matches(km, keys.Back):
+		m.screen = screenSettings
+	case key.Matches(km, keys.Menu):
+		m.screen = screenDashboard
+	case key.Matches(km, keys.Up):
+		if m.themeCursor > 0 {
+			m.themeCursor--
+		}
+	case key.Matches(km, keys.Down):
+		if m.themeCursor < len(m.themeChoices)-1 {
+			m.themeCursor++
+		}
+	case key.Matches(km, keys.Select):
+		if m.themeCursor < 0 || m.themeCursor >= len(m.themeChoices) {
+			return m, nil
+		}
+		choice := m.themeChoices[m.themeCursor]
+		previous := m.cfg.Theme.Selected
+		m.cfg.Theme.Selected = choice.ID
+		if err := theme.Activate(theme.OptionsFromConfig(m.cfg.Theme)); err != nil {
+			m.cfg.Theme.Selected = previous
+			_ = theme.Activate(theme.OptionsFromConfig(m.cfg.Theme))
+			return m.showToast("theme failed: "+err.Error(), components.ToastError)
+		}
+		m.screen = screenSettings
+		return m, saveConfigCmd(m.cfg)
+	}
+	return m, nil
+}
+
 func (m Model) viewSettings() string {
 	banner := components.Banner(" SETTINGS ")
 
@@ -146,6 +201,8 @@ func (m Model) viewSettings() string {
 	var extra string
 	if m.screen == screenEditInterval {
 		extra = m.renderEditInterval()
+	} else if m.screen == screenThemes {
+		extra = m.renderThemePicker()
 	}
 
 	hints := footerHints(keys.Up, keys.Down, keys.Select, keys.Back, keys.Menu, keys.Quit)
@@ -156,6 +213,31 @@ func (m Model) viewSettings() string {
 	}
 	parts = append(parts, hints)
 	return lipgloss.JoinVertical(lipgloss.Left, parts...)
+}
+
+func (m Model) renderThemePicker() string {
+	label := theme.PanelTitle.Render("Select theme")
+	var rows []string
+	for i, choice := range m.themeChoices {
+		line := fmt.Sprintf("  %s (%s)", choice.Name, choice.Kind)
+		if i == m.themeCursor {
+			line = theme.SelectedRow.Render(" ▸ " + choice.Name + " ")
+		}
+		if choice.ID == m.cfg.Theme.Selected {
+			line += theme.Accent.Render("  current")
+		}
+		rows = append(rows, line)
+	}
+	if len(rows) == 0 {
+		rows = append(rows, theme.Dimmed.Render("  no themes found"))
+	}
+	rows = append(rows, theme.Dimmed.Render("[enter] select  [esc] cancel"))
+
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(theme.NeonPink).
+		Padding(0, 1).
+		Render(lipgloss.JoinVertical(lipgloss.Left, append([]string{label}, rows...)...))
 }
 
 func (m Model) renderEditInterval() string {

@@ -11,6 +11,8 @@ import (
 // must be 1..100 characters.
 var repoSlugPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,99}/[A-Za-z0-9._-]{1,100}$`)
 
+var hexColorPattern = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
+
 // Validate checks the config for obvious mistakes. Repos are checked for
 // the "owner/repo" slug format; poll interval is bounds-checked.
 func Validate(cfg Config) error {
@@ -31,6 +33,14 @@ func Validate(cfg Config) error {
 			return fmt.Errorf("duplicate repo %q", r)
 		}
 		seen[key] = struct{}{}
+	}
+	if strings.TrimSpace(cfg.Theme.Selected) == "" {
+		return fmt.Errorf("theme.selected must not be empty")
+	}
+	for key, value := range cfg.Theme.Colors {
+		if !hexColorPattern.MatchString(strings.TrimSpace(value)) {
+			return fmt.Errorf("theme.colors.%s must be a #RRGGBB hex color", key)
+		}
 	}
 	return nil
 }
