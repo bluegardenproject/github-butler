@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/bluegardenproject/github-butler/compare/v0.3.0...v0.4.0) (2026-05-12)
+
+
+### Features
+
+* add selectable themes and harden installer downloads ([e4645fa](https://github.com/bluegardenproject/github-butler/commit/e4645fa1d4002759415606c71618d24736dc0671))
+* **theme:** add high contrast examples ([87d86c8](https://github.com/bluegardenproject/github-butler/commit/87d86c8d252523fd0f44e91872bbe8f850d62c7a))
+
 ## [0.3.0](https://github.com/bluegardenproject/github-butler/compare/v0.2.0...v0.3.0) (2026-05-11)
 
 
