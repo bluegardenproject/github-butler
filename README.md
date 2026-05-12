@@ -131,10 +131,12 @@ On first launch with no config, the app opens to an empty dashboard; press `m` â
 
 `auto` uses Lipgloss/termenv to detect whether your terminal background is dark or light, then chooses the built-in `neon-dark` or `neon-light` theme. Detection depends on terminal support, so you can force either built-in theme from **Settings** â†’ **Theme**.
 
-User themes live in `~/.config/github-butler/themes` by default. The app seeds two bundled examples there on startup:
+User themes live in `~/.config/github-butler/themes` by default. The app seeds bundled examples there on startup:
 
 - `midnight-neon.theme.yaml`
 - `daylight-neon.theme.yaml`
+- `high-contrast-dark.theme.yaml`
+- `high-contrast-light.theme.yaml`
 
 Self-updates seed newer examples after restart. If you changed one of the bundled examples, the app preserves your file and writes the updated example next to it with a `.new` suffix.
 

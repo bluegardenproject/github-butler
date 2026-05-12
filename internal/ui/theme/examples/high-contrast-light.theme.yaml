@@ -1,0 +1,27 @@
+name: High Contrast Light
+base: neon-light
+colors:
+  accent: "#24292F"
+  info: "#0550AE"
+  success: "#116329"
+  warning: "#744500"
+  danger: "#A40E26"
+  dim: "#57606A"
+  selected_foreground: "#FFFFFF"
+  selected_background: "#24292F"
+  chip_foreground: "#FFFFFF"
+  black: "#24292F"
+  white: "#FFFFFF"
+  dark_bg: "#FFFFFF"
+gradients:
+  title:
+    - "#24292F"
+    - "#0550AE"
+    - "#116329"
+  countdown:
+    - "#A40E26"
+    - "#744500"
+    - "#116329"
+  header:
+    - "#24292F"
+    - "#0550AE"
