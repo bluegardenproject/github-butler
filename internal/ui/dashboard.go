@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bluegardenproject/github-butler/internal/config"
 	"github.com/bluegardenproject/github-butler/internal/github"
 	"github.com/bluegardenproject/github-butler/internal/ui/components"
 	"github.com/bluegardenproject/github-butler/internal/ui/theme"
@@ -28,6 +29,9 @@ const (
 	colUnresW  = 6
 	colAgeW    = 8
 	colActW    = 8
+
+	compactAutoWidthThreshold = 150
+	compactMinContentWidth    = 60
 )
 
 func (m Model) updateDashboard(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -100,6 +104,10 @@ func (m Model) viewDashboard() string {
 }
 
 func (m Model) renderTable() string {
+	if m.useCompactTable() {
+		return m.renderCompactTable()
+	}
+
 	header := renderHeaderRow()
 	rows := make([]string, 0, len(m.prs)+1)
 	rows = append(rows, header)
@@ -113,6 +121,46 @@ func (m Model) renderTable() string {
 		rows = append(rows, m.renderRow(pr, i == m.selected))
 	}
 	return theme.Panel.Render(strings.Join(rows, "\n"))
+}
+
+func (m Model) useCompactTable() bool {
+	switch m.cfg.DashboardView {
+	case config.DashboardViewCompact:
+		return true
+	case config.DashboardViewFull:
+		return false
+	default:
+		return m.width > 0 && m.width < compactAutoWidthThreshold
+	}
+}
+
+func (m Model) renderCompactTable() string {
+	contentWidth := m.tableContentWidth()
+	rows := make([]string, 0, len(m.prs)+1)
+	rows = append(rows, renderCompactHeaderRow(contentWidth))
+
+	var prevRepo string
+	for i, pr := range m.prs {
+		if m.cfg.GroupByRepo && pr.Repo != prevRepo {
+			rows = append(rows, renderGroupHeader(pr.Repo))
+			prevRepo = pr.Repo
+		}
+		rows = append(rows, m.renderCompactRow(pr, i == m.selected, contentWidth))
+	}
+	return theme.Panel.Render(strings.Join(rows, "\n"))
+}
+
+func (m Model) tableContentWidth() int {
+	// Panel adds a rounded border and horizontal padding, so keep the inner
+	// layout a few columns narrower than the terminal width.
+	if m.width <= 0 {
+		return 100
+	}
+	w := m.width - 4
+	if w < compactMinContentWidth {
+		return compactMinContentWidth
+	}
+	return w
 }
 
 // renderGroupHeader renders a single separator row above each repo group
@@ -186,6 +234,18 @@ func renderHeaderRow() string {
 	return theme.Gradient(strings.Join(cells, " "), theme.HeaderStops...)
 }
 
+func renderCompactHeaderRow(width int) string {
+	repoW, numW, titleW, tagsW, statusW := compactColumnWidths(width)
+	cells := []string{
+		pad("REPO", repoW),
+		pad("#", numW),
+		pad("TITLE", titleW),
+		pad("TAGS", tagsW),
+		pad("STATUS", statusW),
+	}
+	return theme.Gradient(strings.Join(cells, " "), theme.HeaderStops...)
+}
+
 func (m Model) renderRow(pr github.PR, selected bool) string {
 	repo := pad(shortRepo(pr.Repo), colRepoW)
 	num := pad(fmt.Sprintf("#%d", pr.Number), colNumW)
@@ -211,6 +271,93 @@ func (m Model) renderRow(pr github.PR, selected bool) string {
 	}
 	trailing := strings.Join([]string{tags, branch, ci, rev, req, unres, age, act}, " ")
 	return leading + " " + trailing
+}
+
+func (m Model) renderCompactRow(pr github.PR, selected bool, width int) string {
+	repoW, numW, titleW, tagsW, statusW := compactColumnWidths(width)
+	repo := pad(shortRepo(pr.Repo), repoW)
+	num := pad(fmt.Sprintf("#%d", pr.Number), numW)
+	title := pad(truncate(pr.Title, titleW), titleW)
+	tags := padVisible(renderTags(pr), tagsW)
+	status := padVisible(compactStatus(pr), statusW)
+
+	leading := strings.Join([]string{repo, num, title}, " ")
+	if selected {
+		leading = theme.SelectedRow.Render(leading)
+	}
+	return strings.Join([]string{leading, tags, status}, " ")
+}
+
+func compactColumnWidths(width int) (repoW, numW, titleW, tagsW, statusW int) {
+	repoW, numW, tagsW, statusW = 18, 7, 12, 24
+	titleW = width - repoW - numW - tagsW - statusW - 4
+	if titleW >= 18 {
+		return repoW, numW, titleW, tagsW, statusW
+	}
+
+	for titleW < 18 && statusW > 18 {
+		statusW--
+		titleW++
+	}
+	for titleW < 18 && tagsW > 8 {
+		tagsW--
+		titleW++
+	}
+	for titleW < 18 && repoW > 12 {
+		repoW--
+		titleW++
+	}
+	if titleW < 12 {
+		titleW = 12
+	}
+	return repoW, numW, titleW, tagsW, statusW
+}
+
+func compactStatus(pr github.PR) string {
+	parts := []string{compactCIStatus(pr), compactReviewStatus(pr)}
+	if pr.UnresolvedCount > 0 {
+		parts = append(parts, theme.Pending.Render(fmt.Sprintf("UNRES %d", pr.UnresolvedCount)))
+	}
+	return strings.Join(parts, " ")
+}
+
+func compactCIStatus(pr github.PR) string {
+	switch {
+	case pr.TotalChecks == 0:
+		return theme.Dimmed.Render("—")
+	case len(pr.FailingChecks) > 0:
+		return theme.Fail.Render(fmt.Sprintf("FAIL×%d", len(pr.FailingChecks)))
+	case pr.PendingChecks > 0:
+		return theme.Pending.Render(fmt.Sprintf("RUN×%d", pr.PendingChecks))
+	default:
+		return theme.OK.Render("PASS")
+	}
+}
+
+func compactReviewStatus(pr github.PR) string {
+	total := len(pr.CodeOwnerReviews())
+	if total > 0 {
+		approved := pr.CodeOwnerApprovalCount()
+		switch {
+		case pr.CodeOwnerHasChangesRequested():
+			return theme.Fail.Render("CHG")
+		case approved == total:
+			return theme.OK.Render("OK")
+		default:
+			return theme.Info.Render(fmt.Sprintf("REQ %d/%d", approved, total))
+		}
+	}
+
+	switch pr.ReviewDecision {
+	case "APPROVED":
+		return theme.OK.Render("OK")
+	case "CHANGES_REQUESTED":
+		return theme.Fail.Render("CHG")
+	case "REVIEW_REQUIRED":
+		return theme.Info.Render("PEND")
+	default:
+		return theme.Dimmed.Render("—")
+	}
 }
 
 // renderTags joins the DRAFT/STALE chips for a PR into a single styled

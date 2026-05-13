@@ -35,6 +35,11 @@ var settingItems = []settingItem{
 		activate: toggleGroupByRepo,
 	},
 	{
+		label:    "Dashboard view",
+		value:    func(cfg config.Config) string { return cfg.DashboardView },
+		activate: openDashboardViewPicker,
+	},
+	{
 		label:    "Theme",
 		value:    func(cfg config.Config) string { return cfg.Theme.Selected },
 		activate: openThemePicker,
@@ -66,6 +71,29 @@ func toggleGroupByRepo(m Model) (Model, tea.Cmd) {
 	m.prs = OrderPRs(m.prs, m.cfg.GroupByRepo, m.cfg.Repos)
 	m.selected = 0
 	return m, saveConfigCmd(m.cfg)
+}
+
+type dashboardViewChoice struct {
+	id   string
+	name string
+}
+
+var dashboardViewChoices = []dashboardViewChoice{
+	{id: config.DashboardViewAuto, name: "Auto"},
+	{id: config.DashboardViewFull, name: "Full"},
+	{id: config.DashboardViewCompact, name: "Compact"},
+}
+
+func openDashboardViewPicker(m Model) (Model, tea.Cmd) {
+	m.screen = screenDashboardViews
+	m.viewCursor = 0
+	for i, choice := range dashboardViewChoices {
+		if choice.id == m.cfg.DashboardView {
+			m.viewCursor = i
+			break
+		}
+	}
+	return m, nil
 }
 
 func openThemePicker(m Model) (Model, tea.Cmd) {
@@ -144,6 +172,37 @@ func (m Model) updateEditInterval(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m Model) updateDashboardViews(msg tea.Msg) (tea.Model, tea.Cmd) {
+	km, ok := msg.(tea.KeyMsg)
+	if !ok {
+		return m, nil
+	}
+	switch {
+	case key.Matches(km, keys.Quit):
+		return m, tea.Quit
+	case key.Matches(km, keys.Back):
+		m.screen = screenSettings
+	case key.Matches(km, keys.Menu):
+		m.screen = screenDashboard
+	case key.Matches(km, keys.Up):
+		if m.viewCursor > 0 {
+			m.viewCursor--
+		}
+	case key.Matches(km, keys.Down):
+		if m.viewCursor < len(dashboardViewChoices)-1 {
+			m.viewCursor++
+		}
+	case key.Matches(km, keys.Select):
+		if m.viewCursor < 0 || m.viewCursor >= len(dashboardViewChoices) {
+			return m, nil
+		}
+		m.cfg.DashboardView = dashboardViewChoices[m.viewCursor].id
+		m.screen = screenSettings
+		return m, saveConfigCmd(m.cfg)
+	}
+	return m, nil
+}
+
 func (m Model) updateThemes(msg tea.Msg) (tea.Model, tea.Cmd) {
 	km, ok := msg.(tea.KeyMsg)
 	if !ok {
@@ -201,6 +260,8 @@ func (m Model) viewSettings() string {
 	var extra string
 	if m.screen == screenEditInterval {
 		extra = m.renderEditInterval()
+	} else if m.screen == screenDashboardViews {
+		extra = m.renderDashboardViewPicker()
 	} else if m.screen == screenThemes {
 		extra = m.renderThemePicker()
 	}
@@ -213,6 +274,28 @@ func (m Model) viewSettings() string {
 	}
 	parts = append(parts, hints)
 	return lipgloss.JoinVertical(lipgloss.Left, parts...)
+}
+
+func (m Model) renderDashboardViewPicker() string {
+	label := theme.PanelTitle.Render("Select dashboard view")
+	var rows []string
+	for i, choice := range dashboardViewChoices {
+		line := "  " + choice.name
+		if i == m.viewCursor {
+			line = theme.SelectedRow.Render(" ▸ " + choice.name + " ")
+		}
+		if choice.id == m.cfg.DashboardView {
+			line += theme.Accent.Render("  current")
+		}
+		rows = append(rows, line)
+	}
+	rows = append(rows, theme.Dimmed.Render("[enter] select  [esc] cancel"))
+
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(theme.NeonPink).
+		Padding(0, 1).
+		Render(lipgloss.JoinVertical(lipgloss.Left, append([]string{label}, rows...)...))
 }
 
 func (m Model) renderThemePicker() string {

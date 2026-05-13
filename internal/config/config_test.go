@@ -23,9 +23,31 @@ func TestLoadDefaultsThemeConfig(t *testing.T) {
 	if cfg.Theme.Selected != "auto" {
 		t.Fatalf("Theme.Selected = %q, want auto", cfg.Theme.Selected)
 	}
+	if cfg.DashboardView != DashboardViewAuto {
+		t.Fatalf("DashboardView = %q, want auto", cfg.DashboardView)
+	}
 	wantDir := filepath.Join(xdg, "github-butler", "themes")
 	if cfg.Theme.Directory != wantDir {
 		t.Fatalf("Theme.Directory = %q, want %q", cfg.Theme.Directory, wantDir)
+	}
+}
+
+func TestValidateDashboardView(t *testing.T) {
+	cfg := Default()
+	for _, view := range []string{DashboardViewAuto, DashboardViewFull, DashboardViewCompact} {
+		cfg.DashboardView = view
+		if err := Validate(cfg); err != nil {
+			t.Fatalf("Validate(%q) error: %v", view, err)
+		}
+	}
+
+	cfg.DashboardView = "tiny"
+	err := Validate(cfg)
+	if err == nil {
+		t.Fatal("Validate succeeded, want error")
+	}
+	if !strings.Contains(err.Error(), "dashboard_view") {
+		t.Fatalf("Validate error = %q, want dashboard_view path", err)
 	}
 }
 
