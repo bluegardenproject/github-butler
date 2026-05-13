@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/bluegardenproject/github-butler/compare/v0.4.0...v0.5.0) (2026-05-13)
+
+
+### Features
+
+* **ui:** add compact dashboard view ([c040ec0](https://github.com/bluegardenproject/github-butler/commit/c040ec038cb34b341b686d6b45bc3d1491297aed))
+
+
+### Miscellaneous
+
+* **cursor:** add project guidance ([a4d1075](https://github.com/bluegardenproject/github-butler/commit/a4d107534ea4a3f568ffbc36e149ff3f40997bc2))
+
 ## [0.4.0](https://github.com/bluegardenproject/github-butler/compare/v0.3.0...v0.4.0) (2026-05-12)
 
 
