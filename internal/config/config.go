@@ -13,6 +13,10 @@ const (
 	DefaultPollInterval    = 20 * time.Second
 	MinPollIntervalSeconds = 2
 	MaxPollIntervalSeconds = 3600
+
+	DashboardViewAuto    = "auto"
+	DashboardViewFull    = "full"
+	DashboardViewCompact = "compact"
 )
 
 // Config is the user-facing configuration persisted as YAML.
@@ -20,6 +24,7 @@ type Config struct {
 	Repos               []string `yaml:"repos"`
 	PollIntervalSeconds int      `yaml:"poll_interval_seconds"`
 	GroupByRepo         bool     `yaml:"group_by_repo"`
+	DashboardView       string   `yaml:"dashboard_view"`
 	Theme               Theme    `yaml:"theme"`
 
 	// Path is the file this config was loaded from (or should be saved to).
@@ -50,6 +55,7 @@ func Default() Config {
 	return Config{
 		Repos:               []string{},
 		PollIntervalSeconds: int(DefaultPollInterval / time.Second),
+		DashboardView:       DashboardViewAuto,
 		Theme: Theme{
 			Selected:  "auto",
 			Directory: themeDir,

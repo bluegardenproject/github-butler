@@ -41,6 +41,9 @@ func Load(path string) (Config, error) {
 	if cfg.Repos == nil {
 		cfg.Repos = []string{}
 	}
+	if cfg.DashboardView == "" {
+		cfg.DashboardView = DashboardViewAuto
+	}
 	if cfg.Theme.Selected == "" {
 		cfg.Theme.Selected = "auto"
 	}

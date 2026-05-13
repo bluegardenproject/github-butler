@@ -105,6 +105,7 @@ repos:
   - owner/repo-b
 poll_interval_seconds: 20
 group_by_repo: false
+dashboard_view: auto # auto, full, compact
 theme:
   selected: auto # auto, neon-dark, neon-light, or a user theme id
   directory: ~/.config/github-butler/themes
@@ -119,6 +120,7 @@ theme:
 | `repos`                 | list | `[]`    | List of `owner/repo` slugs to track                                                          |
 | `poll_interval_seconds` | int  | `20`    | How often the app polls GitHub (min `2`, max `3600`)                                         |
 | `group_by_repo`         | bool | `false` | When `true`, PRs are grouped under per-repo section headers instead of one flat updated list |
+| `dashboard_view`        | str  | `auto`  | Dashboard layout: `auto`, `full`, or `compact`                                               |
 | `theme.selected`        | str  | `auto`  | Theme id to use (`auto`, `neon-dark`, `neon-light`, or a user theme filename without suffix) |
 | `theme.directory`       | str  | XDG dir | Directory scanned for `*.theme.yaml` user themes                                             |
 | `theme.colors`          | map  | `{}`    | Optional config-level color overrides applied after the selected theme                       |
@@ -126,6 +128,12 @@ theme:
 Repositories and settings are editable from inside the app (`m` → **Settings** / **Repositories**), so you rarely need to hand-edit the YAML — but doing so works too.
 
 On first launch with no config, the app opens to an empty dashboard; press `m` → Repositories → `a` to add one.
+
+### Dashboard layouts
+
+`dashboard_view: auto` keeps the full table on wide terminals and switches to a compact reduced-column table on narrower screens or split panes. Use **Settings** → **Dashboard view** to pick `auto`, `full`, or `compact`.
+
+Compact mode stays one row per PR and keeps only `REPO`, `#`, `TITLE`, `TAGS`, and a dense `STATUS` summary. `STATUS` combines CI (`PASS`, `FAIL×2`, `RUN×1`), review/required state (`OK`, `CHG`, `REQ 1/2`, `PEND`), and unresolved threads (`UNRES 3` when non-zero).
 
 ### Themes
 

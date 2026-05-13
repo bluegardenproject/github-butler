@@ -23,6 +23,7 @@ const (
 	screenConfirmRemove
 	screenSettings
 	screenEditInterval
+	screenDashboardViews
 	screenThemes
 )
 
@@ -50,6 +51,7 @@ type Model struct {
 	menuCursor     int
 	reposCursor    int
 	settingsCursor int
+	viewCursor     int
 	themeCursor    int
 	themeChoices   []theme.Choice
 
@@ -182,6 +184,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateSettings(msg)
 	case screenEditInterval:
 		return m.updateEditInterval(msg)
+	case screenDashboardViews:
+		return m.updateDashboardViews(msg)
 	case screenThemes:
 		return m.updateThemes(msg)
 	}
@@ -202,7 +206,7 @@ func (m Model) View() string {
 		body = m.viewMenu()
 	case screenRepos, screenAddRepo, screenConfirmRemove:
 		body = m.viewRepos()
-	case screenSettings, screenEditInterval, screenThemes:
+	case screenSettings, screenEditInterval, screenDashboardViews, screenThemes:
 		body = m.viewSettings()
 	}
 

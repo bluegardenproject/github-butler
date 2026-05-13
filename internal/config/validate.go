@@ -34,6 +34,12 @@ func Validate(cfg Config) error {
 		}
 		seen[key] = struct{}{}
 	}
+	switch cfg.DashboardView {
+	case "", DashboardViewAuto, DashboardViewFull, DashboardViewCompact:
+	default:
+		return fmt.Errorf("dashboard_view must be one of %q, %q, or %q (got %q)",
+			DashboardViewAuto, DashboardViewFull, DashboardViewCompact, cfg.DashboardView)
+	}
 	if strings.TrimSpace(cfg.Theme.Selected) == "" {
 		return fmt.Errorf("theme.selected must not be empty")
 	}
